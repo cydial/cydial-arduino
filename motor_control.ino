@@ -25,7 +25,7 @@ void setup(){
 }
 
 void loop(){
-  long newPosition = myEnc.read()/4;
+  long newPosition = myEnc.read()/4; // 로터리 변화 감지해서 새 위치 설정
   if(newPosition != oldPosition){
     oldPosition = newPosition;
     Serial.println(newPosition);
@@ -33,6 +33,6 @@ void loop(){
     lcd.print("      ");
     lcd.setCursor(5,1);
     lcd.print(newPosition);
-    myservo.write(abs(newPosition));
+    myservo.write(abs(newPosition)); // 음수이면 모터 동작 안하므로 절댓값
   }
 }
