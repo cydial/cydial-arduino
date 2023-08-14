@@ -155,8 +155,7 @@ const uint8_t font[128][8] PROGMEM = {
 };
 
 void setup() {
-  // put your setup code here, to run once:
-  Serial.begin(9600);
+  Serial.begin(9600); /* 시리얼 포트 9600번 */
   pinMode(SCK, OUTPUT);
   pinMode(DIN, OUTPUT);
   pinMode(LATCH, OUTPUT);
@@ -178,18 +177,18 @@ void setup() {
   reset_StringBuff(); // string에 저장된 문자열을 stringBuff에 저장
 }
 
-typedef struct LightSensor{
+typedef struct LightSensor{ // 조도 센서: 시간 / 센서값 관련 구조체
   int time;
   int value;
 } LightSensor;
+// 전역변수
 int i=0;
 int maxindex = 0;
 int maxindex2 = 0;
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  const bool DEBUG_MODE = true;
-  const int DEBUG_INTERVAL = 200;
+  const bool DEBUG_MODE = true; // true로 활성화 시 디버그 모드 ON (전체 센서값 보임)
+  const int DEBUG_INTERVAL = 200; // 새로고침 주기
   LightSensor L[] = {
     {7, 1024 - analogRead(A5)},
     {8, 1024 - analogRead(A4)},
@@ -206,7 +205,7 @@ void loop() {
     {16, 1024 - analogRead(A10)},
     {17, 1024 - analogRead(A9)}
   };
-  if (DEBUG_MODE){
+  if (DEBUG_MODE){ // 디버그 모드시 각 센서값 출력
     cnt++;
     Serial.print("-----");
     Serial.print(cnt);
@@ -242,24 +241,24 @@ void loop() {
     Serial.println(R[0].value);
     delay(DEBUG_INTERVAL);
   }
-  for(i=0; i<=6; i++)
+  for(i=0; i<=6; i++) // 왼쪽 최댓값
   {
       if(L[maxindex].value <= L[i].value)
       {
           maxindex = i;
       }
   }
-  for(i=0; i<=6; i++)
+  for(i=0; i<=6; i++) // 오른쪽 최댓값
   {
       if(R[maxindex2].value <= R[i].value)
       {
           maxindex2 = i;
       }
   }
-  int maxtime = (L[maxindex].value>=R[maxindex2].value)?L[maxindex].time:R[maxindex2].time;
+  int maxtime = (L[maxindex].value>=R[maxindex2].value)?L[maxindex].time:R[maxindex2].time; // 최대 시간 설정 (L/R 중 가장 큰 것으로)
   // if (L[maxindex].time == 12 || R[maxindex2].time == 12) maxtime = 12;
   Serial.println(maxtime);
-  switch(maxtime){
+  switch(maxtime){ // 오전/오후 구분해서 도트 매트릭스에 출력
     case 7:
       string = "AM07";
       break;
@@ -307,6 +306,8 @@ void loop() {
   Serial.print(R[maxindex2].time);
   Serial.print(" / value: ");
   Serial.print(R[maxindex2].value);
+
+// 도트 매트릭스 관련 코드
   unsigned long now = millis();
   static unsigned long pastTime;
 
