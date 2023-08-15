@@ -1,4 +1,4 @@
-# Cydial for Arduino
+# Smart Cydial
 Arduino Mega와 Arduino UNO를 이용한 해시계 코드입니다.  
 Arduino Mega에 `mega.ino`를, Arduino UNO에 `uno.ino`를 업로드하면 됩니다.  
 또한, 아래 결선도에 맞게 회로를 구성하시면 됩니다.
