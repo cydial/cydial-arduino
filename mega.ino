@@ -154,8 +154,23 @@ const uint8_t font[128][8] PROGMEM = {
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}    // U+007F
 };
 
+// 조도센서에서 밝다고 판단하는 기준점
+const int CP_12L = 800;
+const int CP_13 = 700;
+const int CP_14 = 700;
+const int CP_15 = 700;
+const int CP_16 = 700;
+const int CP_17 = 260;
+const int CP_12R = 800;
+const int CP_11 = 800;
+const int CP_10 = 800;
+const int CP_9 = 800;
+const int CP_8 = 800;
+const int CP_7 = 300;
+
 void setup() {
-  Serial.begin(9600); /* 시리얼 포트 9600번 */
+  // put your setup code here, to run once:
+  Serial.begin(9600);
   pinMode(SCK, OUTPUT);
   pinMode(DIN, OUTPUT);
   pinMode(LATCH, OUTPUT);
@@ -177,18 +192,20 @@ void setup() {
   reset_StringBuff(); // string에 저장된 문자열을 stringBuff에 저장
 }
 
-typedef struct LightSensor{ // 조도 센서: 시간 / 센서값 관련 구조체
+typedef struct LightSensor{
   int time;
   int value;
 } LightSensor;
-// 전역변수
 int i=0;
-int maxindex = 0;
-int maxindex2 = 0;
+// int maxindex = 0;
+// int maxindex2 = 0;
 
 void loop() {
-  const bool DEBUG_MODE = true; // true로 활성화 시 디버그 모드 ON (전체 센서값 보임)
-  const int DEBUG_INTERVAL = 200; // 새로고침 주기
+  // put your main code here, to run repeatedly:
+  const bool DEBUG_MODE = true;
+  const int DEBUG_INTERVAL = 200; // ms (디버그 모드 활성화 시 추가)
+  // const int INTERVAL = 100; // ms
+  const int INTERVAL = 2000; // ms
   LightSensor L[] = {
     {7, 1024 - analogRead(A5)},
     {8, 1024 - analogRead(A4)},
@@ -205,60 +222,144 @@ void loop() {
     {16, 1024 - analogRead(A10)},
     {17, 1024 - analogRead(A9)}
   };
-  if (DEBUG_MODE){ // 디버그 모드시 각 센서값 출력
+  if (DEBUG_MODE){
     cnt++;
     Serial.print("-----");
     Serial.print(cnt);
     Serial.print("-----\n");
-    Serial.println("[[L12-Left]]");
-    Serial.println(L[6].value);
-    Serial.println("[[L11]]");
+    Serial.print("[");
+    Serial.print(L[5].time);
+    Serial.print("]\n");
     Serial.println(L[5].value);
-    Serial.println("[[L10]]");
+    Serial.print("[");
+    Serial.print(L[4].time);
+    Serial.print("]\n");
     Serial.println(L[4].value);
-    Serial.println("[[L9]]");
+    Serial.print("[");
+    Serial.print(L[3].time);
+    Serial.print("]\n");
     Serial.println(L[3].value);
-    Serial.println("[[L8]]");
+    Serial.print("[");
+    Serial.print(L[2].time);
+    Serial.print("]\n");
     Serial.println(L[2].value);
-    Serial.println("[[L7]]");
+    Serial.print("[");
+    Serial.print(L[1].time);
+    Serial.print("]\n");
     Serial.println(L[1].value);
-    Serial.println("[[L6]]");
+    Serial.print("[");
+    Serial.print(L[0].time);
+    Serial.print("]\n");
     Serial.println(L[0].value);
     Serial.println("-----");
-    Serial.println("[[L18]]");
-    Serial.println(R[6].value);;
-    Serial.println("[[L17]]");
+    Serial.print("[");
+    Serial.print(R[5].time);
+    Serial.print("]\n");
     Serial.println(R[5].value);
-    Serial.println("[[L16]]");
+    Serial.print("[");
+    Serial.print(R[4].time);
+    Serial.print("]\n");
     Serial.println(R[4].value);
-    Serial.println("[[L15]]");
+    Serial.print("[");
+    Serial.print(R[3].time);
+    Serial.print("]\n");
     Serial.println(R[3].value);
-    Serial.println("[[L14]]");
+    Serial.print("[");
+    Serial.print(R[2].time);
+    Serial.print("]\n");
     Serial.println(R[2].value);
-    Serial.println("[[L13]]");
+    Serial.print("[");
+    Serial.print(R[1].time);
+    Serial.print("]\n");
     Serial.println(R[1].value);
-    Serial.println("[[L12-Right]]");
+    Serial.print("[");
+    Serial.print(R[0].time);
+    Serial.print("]\n");
     Serial.println(R[0].value);
     delay(DEBUG_INTERVAL);
   }
-  for(i=0; i<=6; i++) // 왼쪽 최댓값
-  {
-      if(L[maxindex].value <= L[i].value)
-      {
-          maxindex = i;
+  int ctime=-99; // current time
+  if (L[0].value < CP_7 && L[1].value < CP_8 && L[2].value < CP_9 && L[3].value < CP_10 && L[4].value < CP_11 && L[5].value < CP_12L){ // 좌측 시반면이 모두 어두울 때
+    if (R[0].value < CP_12R && R[1].value < CP_13 && R[2].value < CP_14 && R[3].value < CP_15 && R[4].value < CP_16 && R[5].value < CP_17){ // 좌, 우측 시반면이 모두 어두울 때
+      ctime = 0; // 정오
+    }
+    else if (R[0].value > CP_12R){ // 좌측 시반면이 모두 어두우며, 우측 시반면에서 12시가 밝을 때
+      if (R[1].value < CP_13 && R[2].value < CP_14 && R[3].value < CP_15 && R[4].value <CP_16 && R[5].value < CP_17){
+        ctime = 1200; // 12시 XX분
       }
-  }
-  for(i=0; i<=6; i++) // 오른쪽 최댓값
-  {
-      if(R[maxindex2].value <= R[i].value)
-      {
-          maxindex2 = i;
+      else if (R[1].value > CP_13){
+        if (R[2].value > CP_14){
+          if (R[3].value > CP_15){
+            if (R[4].value > CP_16){
+              if (R[5].value > CP_17){
+                ctime = 17; // 17시
+              }
+              else{
+                ctime = 16; // 16시
+              }
+            }
+            else{
+              ctime = 15; // 15시
+            }
+          }
+          else{
+            ctime = 14; // 14시
+          }
+        }
+        else{
+          ctime = 13; // 13시
+        }
       }
+      else{
+        ctime = -2; // TIMEORDER ERROR
+      }
+    }
   }
-  int maxtime = (L[maxindex].value>=R[maxindex2].value)?L[maxindex].time:R[maxindex2].time; // 최대 시간 설정 (L/R 중 가장 큰 것으로)
-  // if (L[maxindex].time == 12 || R[maxindex2].time == 12) maxtime = 12;
-  Serial.println(maxtime);
-  switch(maxtime){ // 오전/오후 구분해서 도트 매트릭스에 출력
+  else if (R[0].value < CP_12R && R[1].value < CP_13 && R[2].value < CP_14 && R[3].value < CP_15 && R[4].value < CP_16 && R[5].value < CP_17){ // 우측 시반면 모두 어둡고, 좌측 중 하나라도 밝음
+    if (L[5].value > CP_12L){ // 우측 시반면이 모두 어둡고, 좌측 시반면에서 12시가 밝을 때
+      if (L[0].value < CP_7 && L[1].value < CP_8 && L[2].value < CP_9 && L[3].value < CP_10 && L[4].value < CP_11){ // 좌측 시반면이 7~11시까지 어두울 때 (12시만 밝을 때)
+        ctime = 12; // 11시 XX분
+      }
+      else if (L[4].value > CP_11){ // 좌측 시반면이 11시가 밝을 때
+        if (L[3].value > CP_10){ // 좌측 시반면이 10시가 밝을 때
+          if (L[2].value > CP_9){ // 좌측 시반면이 9시가 밝을 때
+            if (L[1].value > CP_8){ // 좌측 시반면이 8시가 밝을 때
+              if (L[0].value > CP_7){ // 좌측 시반면이 7시가 밝을 때
+                ctime = 7; // 7시
+              }
+              else{ // 좌측 시반면이 7시가 어두울 때
+                ctime = 8; // 8시
+              }
+            }
+            else{ // 좌측 시반면이 8시가 어두울 때
+              ctime = 9; // 9시
+            }
+          }
+          else{ // 좌측 시반면이 9시가 어두울 때
+            ctime = 10; // 10시
+          }
+        }
+        else{ // 좌측 시반면이 10시가 어두울 때
+          ctime = 11; // 11시
+        }
+      }
+      else{
+        ctime = -1; // UNKNOWN ERROR
+      }
+    }
+    else{
+      ctime = -2; // ERROR (12시가 밝지 않지만 다른 것이 밝은 경우 / TIMEORDER ERROR)
+    }
+  }
+  else{
+    ctime = -3; // ERROR (좌, 우측 시반면 모두 밝은 경우 / SUPERBRIGHT ERROR)
+  }
+  
+  Serial.println(ctime);
+  switch(ctime){
+    case 0:
+      string = "NOON";
+      break;
     case 7:
       string = "AM07";
       break;
@@ -274,8 +375,11 @@ void loop() {
     case 11:
       string = "AM11";
       break;
+    case 1200:
+      string = "PM12"; // 12시 XX분
+      break;
     case 12:
-      string = "PM12";
+      string = "AM11"; // 11시 XX분
       break;
     case 13:
       string = "PM01";
@@ -292,25 +396,32 @@ void loop() {
     case 17:
       string = "PM05";
       break;
+    case -1:
+      string = "ER01";
+      break;
+    case -2:
+      string = "ER02";
+      break;
+    case -3:
+      string = "ER03";
+      break;
     default:
-      string = "ERROR";
+      string = "ER10";
       break;
   }
   Serial.println(string);
   reset_StringBuff(); // string에 저장된 문자열을 stringBuff에 저장
-  Serial.print("\nLeft max Time: ");
-  Serial.print(L[maxindex].time);
-  Serial.print(" / value: ");
-  Serial.print(L[maxindex].value);
-  Serial.print("\nRight max Time: ");
-  Serial.print(R[maxindex2].time);
-  Serial.print(" / value: ");
-  Serial.print(R[maxindex2].value);
-
-// 도트 매트릭스 관련 코드
+  // Serial.print("\nLeft max Time: ");
+  // Serial.print(L[maxindex].time);
+  // Serial.print(" / value: ");
+  // Serial.print(L[maxindex].value);
+  // Serial.print("\nRight max Time: ");
+  // Serial.print(R[maxindex2].time);
+  // Serial.print(" / value: ");
+  // Serial.print(R[maxindex2].value);
   unsigned long now = millis();
   static unsigned long pastTime;
-
+  delay(INTERVAL);
   if(now-pastTime >= scrollTIme){ // 설정된 스크롤 간격으로 동작하는 if문
       if(scrollFlag){
           pastTime = now;
@@ -331,7 +442,6 @@ void loop() {
           display_Max7219();
       }
     }
-  delay(DEBUG_INTERVAL);
 }
 
 void write_Max7219(uint8_t address, uint8_t data){
