@@ -361,19 +361,19 @@ void loop() {
       string = "NOON";
       break;
     case 7:
-      string = "AM07";
+      string = "AM06";
       break;
     case 8:
-      string = "AM08";
+      string = "AM07";
       break;
     case 9:
-      string = "AM09";
+      string = "AM08";
       break;
     case 10:
-      string = "AM10";
+      string = "AM09";
       break;
     case 11:
-      string = "AM11";
+      string = "AM10";
       break;
     case 1200:
       string = "PM12"; // 12시 XX분
